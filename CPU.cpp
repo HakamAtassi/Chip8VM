@@ -1,4 +1,5 @@
 #include "CPU.h"
+#include "RAM.h"
 
 using namespace chip8VM;
 
@@ -12,9 +13,10 @@ CPU::CPU(RAM &_ram): ram(&_ram){    //the start up routine
         ram->write(i, 0);
     }
 
-    PC=0x000;
-    SP=0x000;
 
+
+
+    
 }
 
 void CPU::SYS(){     //(0nnn) jump to nnn
@@ -27,10 +29,12 @@ void CPU::CLS(){
 
     
 };
-
 void CPU::RET(){    //return from subroutine
-    PC=ram->read(SP);
-    SP--;
+    //PC=(ram->read(SP)<<8)&0xFF00;
+    //SP--;
+    //PC|=(ram->read(SP))&0x00FF;
+    PCFromtStack();
+    
 };
 
 void CPU::JPAddr(){
@@ -39,130 +43,171 @@ void CPU::JPAddr(){
 };
 
 void CPU::CALL(){   //call subroutine. not same as jump
-    SP++;
-    ram->write(SP,PC&0x00FF);   //big endian. smaller address is smaller value (lsb)
-    SP++;
-    ram->write(SP,(PC&0xFF00)>>8);
+    //SP++;
+    //ram->write(SP,PC&0x00FF);   //big endian. smaller address is smaller value (lsb)
+    //SP++;
+    //ram->write(SP,(PC&0xFF00)>>8);
+    
+    PCToStack();
+    PC=instruction&0x0FFF; //ignore top bit
+
+    return;
 };
 
-void SEVxByte(){
 
+void CPU::SEVxByte(){
+
+    if(Register[(instruction&0x0F00)>>8]==(instruction&0x00FF)){
+        PC++;
+        PC++;
+    }
+
+    return;
 };
 
-void SNEVxByte(){
+void CPU::SNEVxByte(){
+    if(Register[(instruction&0x0F00)>>8]!=(instruction&0x00FF)){
+        PC++;
+        PC++;
+    }
 
+    return;
 };
 
-void SEVxVy(){
+void CPU::SEVxVy(){
+    if(Register[(instruction&0x0F00)>>8]==Register[instruction&0x00F0]){
+        PC++;
+        PC++;
+    }
 
+    return;
 };
 
-void LDVxByte(){
+void CPU::LDVxByte(){
+    Register[(instruction&0x0F00)>>8]=instruction&0x00FF;
 
+    return;
 };
 
-void ADDVxByte(){
+void CPU::ADDVxByte(){
 
+    Register[(instruction&0x0F00)>>8]+=instruction&0x00FF;
+
+    return;
 };  
 
-void LDVxVy(){
+void CPU::LDVxVy(){
 
+    Register[(instruction&0x0F00)>>8]=Register[(instruction&0x00F0)>>4];
+
+    return;
 }; 
 
-void OR(){
+void CPU::OR(){
+    
+    Register[(instruction&0x0F00)>>8]|=instruction&0x00FF;
 
+    return;
 };
 
-void AND(){
+void CPU::AND(){
 
+    Register[(instruction&0x0F00)>>8]&=instruction&0x00FF;
+
+    return;
 }; 
 
-void XOR(){
+void CPU::XOR(){
 
+    Register[(instruction&0x0F00)>>8]^=instruction&0x00FF;
+
+    return;
 }; 
 
-void ADDVxVy(){
+void CPU::ADDVxVy(){
+    
+    
 
 };   
 
-void SUB(){
+void CPU::SUB(){
 
 };
 
-void SHR(){
+void CPU::SHR(){
 
 };   
 
-void SUBN(){
+void CPU::SUBN(){
 
 };  
 
-void SHL(){
+void CPU::SHL(){
 
 };    
 
-void SNEVxVy(){
+void CPU::SNEVxVy(){
 
 };
 
-void LDIAddr(){
+void CPU::LDIAddr(){
 
 }; 
 
-void JPV0Addr(){
+void CPU::JPV0Addr(){
 
 }; 
 
-void RND(){
+void CPU::RND(){
 
 };
 
-void DRW(){
+void CPU::DRW(){
 
 };
 
-void SKP(){
+void CPU::SKP(){
 
 };
 
-void SKNP(){
+void CPU::SKNP(){
 
 }; 
 
-void LDVxDT(){
+void CPU::LDVxDT(){
 
 };
 
-void LDVxK(){
+void CPU::LDVxK(){
 
 };
 
-void LDDTVx(){
+void CPU::LDDTVx(){
 
 }; 
 
-void LDSTVx(){
+void CPU::LDSTVx(){
 
 
 };     
 
-void ADDIVx(){
+void CPU::ADDIVx(){
 
 };     
 
-void LDFVx(){
+void CPU::LDFVx(){
 
 };
 
-void LDBVx(){
+void CPU::LDBVx(){
 
 };    
 
-void LDIVx(){
+void CPU::LDIVx(){
 
 };    
 
-void LDVxI(){
+void CPU::LDVxI(){
 
 };  
 
