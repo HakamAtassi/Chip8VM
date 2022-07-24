@@ -11,12 +11,15 @@ namespace chip8VM{
     
     class CPU{
         
+
+
+
         //Note: data is big-Endian. Largest address is msb
 
         private:
             
             RAM* ram=nullptr;   //CPU needs a pointer to ram to get instruction
-            uint16_t PC=0x0000;   //only lower 3 bytes used (2^12=4096)
+            uint16_t PC=0x2000;   //only lower 3 bytes used (2^12=4096)
             uint16_t SP=0x0000; //stack pointer
 
 
@@ -48,9 +51,10 @@ namespace chip8VM{
             uint8_t DT,                uint8_t ST,
             */
 
-            std::vector<uint8_t> Register{18,0};    //[0-15]GP + DT + ST
-
             uint16_t index=0x0000;
+
+            std::vector<uint8_t> Register;    //[0-15]GP + DT + ST
+            std::vector<bool> display;    
 
            //DT: delay timer. Decerements by 1 when non-zero @ 60hz. If 0, do nothing. 
           //ST: sound timer. Decerements ... @ 60hz. If non 0, make buzzing noise. If 0, do nothing. 

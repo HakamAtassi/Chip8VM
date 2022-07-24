@@ -13,6 +13,8 @@ CPU::CPU(RAM &_ram): ram(&_ram){    //the start up routine
     }
 
     srand(time(NULL));
+    std::vector<uint8_t> Register(18,0);    //[0-15]GP + DT + ST
+    std::vector<bool> display(2048,false);
 }
 
 
@@ -219,7 +221,26 @@ void CPU::RND(){    //generate random number
     Register[(instruction&0x0F00)>>8]=(rand()%0xF)&(instruction&0x00FF);    //possible error with mismatching sizes
 };
 
-void CPU::DRW(){
+void CPU::DRW(){    //reads n bytes from index I and xors them into screen
+
+    int bytes=(instruction&0x000F); //read display data
+    uint8_t sprite=0x00;    //the 8 bit seg currently being printed to display
+    int x=(instruction&0x0F00)>>8;
+    int y=(instruction&0x00F0)>>4;
+    int counter=0;  //the number of bits already processed to index display vector
+
+    for(int i=0;i<bytes;i++){
+        sprite=ram->read(index+i);
+
+        for(int bit=0;bit<8;bit++){ //add every bit to display
+            if((sprite&0x80)==0x80){
+                display[x+y*64+counter]=1;
+            }
+            sprite=sprite<<1;
+            counter++;
+        }
+    }
+    return;
 
 };
 
