@@ -1,9 +1,11 @@
 #ifndef CPU_H_
 #define CPU_H_
 #include "RAM.h"
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <random>
 
 namespace chip8VM{
     
@@ -46,9 +48,9 @@ namespace chip8VM{
             uint8_t DT,                uint8_t ST,
             */
 
-            std::vector<uint8_t> Register{18,0};    //16 GP + 2 Timers
+            std::vector<uint8_t> Register{18,0};    //[0-15]GP + DT + ST
 
-            uint16_t Index=0x0000;
+            uint16_t index=0x0000;
 
            //DT: delay timer. Decerements by 1 when non-zero @ 60hz. If 0, do nothing. 
           //ST: sound timer. Decerements ... @ 60hz. If non 0, make buzzing noise. If 0, do nothing. 
@@ -74,29 +76,29 @@ namespace chip8VM{
 
 
 
-
-
-            //implement functions
-            //add graphics 
+	
+			/*		Display		*/
+			//The dispaly is essentially a matrix of 64 pixels wide and 32 pixels high
+			//all hex outputs (0-F) are 4 wide and 5 high. 
+			//ex:
+			//	**** **** ****
+			//	**** **** ****
+			//	**** **** ****
+			//	**** **** ****
+			//	**** **** ****
+			
+			//(x,y) values wrap around when they exceed the display values. ie: (x % 64, y % 32).
+			//maximum possible sprite size is 8B x 15B, which is 32 bit x 60 bit. 
             //input keys
         
-        private: //helper members
+        private: //helpers
             uint16_t instruction;
-
-        public: //helper functions
-
-
-            void PCToStack();    //put PC in std::stack(TOS) ;
+            void PCToStack();    //put PC in std::stack(TOS)
             void PCFromtStack(); //get PC from stack (TOS)
-
 
         public:
             CPU(RAM &_ram);
             
-            
-
-
-
     };
 
 }   //namespace chip8VM
