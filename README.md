@@ -3,5 +3,5 @@ A virtualized Chip8 emulator
 
 
 ```
-g++ test.cpp `pkg-config --cflags --libs sdl2` 
+g++ display.cpp ../../RAM.cpp ../../CPU.cpp ../../Chip8.cpp `pkg-config --cflags --libs sdl2`
 ```
