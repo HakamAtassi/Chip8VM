@@ -12,14 +12,12 @@ namespace chip8VM{
     class CPU{
         
 
-
-
         //Note: data is big-Endian. Largest address is msb
 
         private:
             
-            RAM* ram=nullptr;   //CPU needs a pointer to ram to get instruction
-            uint16_t PC=0x2000;   //only lower 3 bytes used (2^12=4096)
+            RAM ram;   //CPU needs a pointer to ram to get instruction
+            uint16_t PC=0x0200;   //only lower 3 bytes used (2^12=4096)
             uint16_t SP=0x0000; //stack pointer
 
 
@@ -97,12 +95,16 @@ namespace chip8VM{
         
         private: //helpers
             uint16_t instruction;
+
             void PCToStack();    //put PC in std::stack(TOS)
             void PCFromtStack(); //get PC from stack (TOS)
-			void fetch();		//updates instruction and increments PC
 
         public:
-            CPU(RAM * _ram, std::vector<bool> _videoMemory);
+            CPU(){};
+            CPU(RAM & _ram, std::vector<bool> _videoMemory);
+            void setRegister(int reg,uint8_t val);
+            uint8_t getRegister(int reg);
+            void fetch();		//updates instruction and increments PC
             void execute();
             
     };

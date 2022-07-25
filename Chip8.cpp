@@ -4,13 +4,14 @@
 #include <SDL2/SDL_render.h>
 #include <vector>
 #include <iostream>
-
+#include <unistd.h>
 
 using namespace chip8VM;
 
-Chip8::Chip8(RAM * _ram, std::vector<bool>& _videoMemory): ram(_ram), videoMemory(_videoMemory){
+Chip8::Chip8(RAM & _ram, std::vector<bool>& _videoMemory): ram(_ram), videoMemory(_videoMemory){
 
-	try{cpu=new CPU(ram,videoMemory);}
+
+	try{cpu=new CPU(_ram,videoMemory);}
 	catch(...){throw "Error in Chip8 constructor";}
 }
 
@@ -31,9 +32,6 @@ void Chip8::createWindow(){
 		renderer = SDL_CreateRenderer(window, -1, 0);
 
 		texture = SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, 640,320);
-
-
-
 }
 
 void Chip8::drawPixel(int x, int y){
@@ -55,15 +53,6 @@ void Chip8::drawPixel(int x, int y){
 }
 
 void Chip8::drawScreen(int x, int y){
-	
-
-	//drawPixel(0,0);
-
-	for(auto elem:videoMemory){
-		std::cout<<elem<<" ";
-	}
-
-
 
 
 	drawPixel(x,y);
@@ -79,26 +68,32 @@ void Chip8::run(){
 
 	while(1){
 
-		try { 
+		for(int i=0;i<18;i++){
+			std::cout<<"Register "<<i<<": "<<(int)getRegister(i)<<"\t";
+		}
+
+
 			for(int i=0;i<2048;i++){	//refresh screen
-				std::cout<<i<<":"<<videoMemory[i]<<", ";
+				//std::cout<<i<<":"<<videoMemory[i]<<", ";
 				if(videoMemory[i]==true){
-				std::cout<<"\ntrue @ "<<i<<"\n";
+					//std::cout<<"\ntrue @ "<<i<<"\n";
 					drawScreen((i%64)*10,(i/64)*10);
 				}
 			}
 			
+
 			//perform next CPU instruction
-			
-		}
-		catch (std::exception& e) {
-			throw "Error running\n";
-		}
+
+			cpu->fetch();
+			cpu->execute();
+
+
 
 		SDL_PollEvent(&event);
 		if(event.type == SDL_QUIT){
 				break;
 		}
+
 	
 	}
 
@@ -112,10 +107,17 @@ void Chip8::run(){
 
 void Chip8::printRam(){
 	for(int i=0;i<4098;i++){
-		std::cout<<(int)ram->read(i)<<" ";
+		std::cout<<(int)ram.read(i)<<" ";
 	}
 	std::cout<<"\n";
 }
 
 
+void Chip8::setRegister(int reg,uint8_t val){
+	cpu->setRegister(reg,val);
+}
+
+uint8_t Chip8::getRegister(int reg){
+	return cpu->getRegister(reg);
+}
 

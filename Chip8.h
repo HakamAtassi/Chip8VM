@@ -13,7 +13,7 @@ namespace chip8VM{
     class Chip8{
 
         private:
-            RAM *ram;
+            RAM ram;
             CPU* cpu;
             std::vector<bool> videoMemory;  //set bit indicates pixel at that address
     
@@ -29,10 +29,15 @@ namespace chip8VM{
             void drawScreen(int x, int y);
             void drawPixel(int x, int y);
 
-        public:
-            Chip8(RAM * _ram, std::vector<bool>& _videoMemory);
-            void createWindow();
+        public: //test functions
+            void setRegister(int reg,uint8_t val);
+            uint8_t getRegister(int reg);
 
+
+
+        public:
+            Chip8(RAM & _ram, std::vector<bool>& _videoMemory);
+            void createWindow();
             void run();
 
     };
