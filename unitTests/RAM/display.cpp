@@ -14,11 +14,15 @@ int main(){
 
 	RAM ram;
 
-	ram.write(0x000,0x99);
-	ram.write(0x0200,0x12);
-	ram.write(0x0201,0x80);
+	ram.write(0x0200,0x05);
+	ram.write(0x0201,0xD0);
+	ram.write(0x0000,0xF0);
+	ram.write(0x0001,0x80);
+	ram.write(0x0002,0xF0);
+	ram.write(0x0003,0x80);
+	ram.write(0x0004,0x80);
 
-	std::vector<bool> videoMemory(2048,0);
+	std::vector<bool> * videoMemory=new std::vector<bool>(2048,0);
 
 
 /*

@@ -8,11 +8,11 @@
 
 using namespace chip8VM;
 
-Chip8::Chip8(RAM & _ram, std::vector<bool>& _videoMemory): ram(_ram), videoMemory(_videoMemory){
+Chip8::Chip8(RAM & _ram, std::vector<bool> * _videoMemory): ram(_ram), videoMemory(_videoMemory){
 
 
-	try{cpu=new CPU(_ram,videoMemory);}
-	catch(...){throw "Error in Chip8 constructor";}
+	cpu=new CPU(_ram,_videoMemory);
+
 }
 
 
@@ -68,14 +68,19 @@ void Chip8::run(){
 
 	while(1){
 
+/*
 		for(int i=0;i<18;i++){
 			std::cout<<"Register "<<i<<": "<<(int)getRegister(i)<<"\t";
 		}
+*/
+
+			cpu->fetch();
+			cpu->execute();
 
 
 			for(int i=0;i<2048;i++){	//refresh screen
 				//std::cout<<i<<":"<<videoMemory[i]<<", ";
-				if(videoMemory[i]==true){
+				if((*videoMemory)[i]==true){
 					//std::cout<<"\ntrue @ "<<i<<"\n";
 					drawScreen((i%64)*10,(i/64)*10);
 				}
@@ -84,8 +89,7 @@ void Chip8::run(){
 
 			//perform next CPU instruction
 
-			cpu->fetch();
-			cpu->execute();
+
 
 
 

@@ -15,7 +15,7 @@ namespace chip8VM{
         private:
             RAM ram;
             CPU* cpu;
-            std::vector<bool> videoMemory;  //set bit indicates pixel at that address
+            std::vector<bool> * videoMemory;  //set bit indicates pixel at that address
     
         private:    //members for video rendering
 
@@ -36,7 +36,7 @@ namespace chip8VM{
 
 
         public:
-            Chip8(RAM & _ram, std::vector<bool>& _videoMemory);
+            Chip8(RAM & _ram, std::vector<bool> * _videoMemory);
             void createWindow();
             void run();
 

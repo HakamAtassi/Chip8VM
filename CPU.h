@@ -52,7 +52,6 @@ namespace chip8VM{
             uint16_t index=0x0000;
 
             std::vector<uint8_t> Register;    //[0-15]GP + DT + ST
-            std::vector<bool> videoMemory;    
 
            //DT: delay timer. Decerements by 1 when non-zero @ 60hz. If 0, do nothing. 
           //ST: sound timer. Decerements ... @ 60hz. If non 0, make buzzing noise. If 0, do nothing. 
@@ -101,7 +100,8 @@ namespace chip8VM{
 
         public:
             CPU(){};
-            CPU(RAM & _ram, std::vector<bool> _videoMemory);
+            CPU(RAM & _ram, std::vector<bool> * _videoMemory);
+            std::vector<bool> * videoMemory;    
             void setRegister(int reg,uint8_t val);
             uint8_t getRegister(int reg);
             void fetch();		//updates instruction and increments PC

@@ -5,10 +5,10 @@
 #include <iostream>
 using namespace chip8VM;
 
-CPU::CPU(RAM & _ram, std::vector<bool> _videoMemory): ram(_ram), videoMemory(_videoMemory){    //the start up routine
+CPU::CPU(RAM & _ram, std::vector<bool> * _videoMemory): ram(_ram){    //the start up routine
                       
-
     srand(time(NULL));
+    videoMemory=_videoMemory;
     //std::vector<uint8_t> Register(18,0);    //[0-15]GP + DT + ST
     Register=std::vector<uint8_t>(18,0);
 }
@@ -16,7 +16,7 @@ CPU::CPU(RAM & _ram, std::vector<bool> _videoMemory): ram(_ram), videoMemory(_vi
 void CPU::fetch(){
 	instruction=0x00FF&ram.read(PC);
 	PC++;
-	instruction|=0xFF00&ram.read(PC);
+	instruction|=0xFF00&(ram.read(PC)<<8);
 	PC++;
 }
 
@@ -28,97 +28,97 @@ void CPU::execute(){    //determines what function to call based on instruction
     else if(instruction==0x00EE){
         RET();
     }
-    else if(instruction&0x1000==0x1000){
+    else if((instruction&0xF000)==0x1000){
         JPAddr();
     }
-    else if(instruction&0x2000==0x2000){
+    else if((instruction&0xF000)==0x2000){
         CALL();
     }
-    else if(instruction&0x3000==0x3000){
+    else if((instruction&0xF000)==0x3000){
         SEVxByte();
     }
-    else if(instruction&0x4000==0x4000){
+    else if((instruction&0xF000)==0x4000){
         SNEVxByte();
     }
-    else if(instruction&0x5000==0x5000){
+    else if((instruction&0xF000)==0x5000){
         SEVxByte();
     }
-    else if(instruction&0x6000==0x6000){
+    else if((instruction&0xF000)==0x6000){
         LDVxByte();
     }
-    else if(instruction&0x7000==0x7000){
+    else if((instruction&0xF000)==0x7000){
         ADDVxByte();
     }    
-    else if(instruction&0x800F==0x8000){
+    else if((instruction&0xF00F)==0x8000){
         LDVxVy();
     }
-    else if(instruction&0x800F==0x8001){
+    else if((instruction&0xF00F)==0x8001){
         OR();
     }
-    else if(instruction&0x800F==0x8002){
+    else if((instruction&0xF00F)==0x8002){
         AND();
     }
-    else if(instruction&0x800F==0x8003){
+    else if((instruction&0xF00F)==0x8003){
         XOR();
     }
-    else if(instruction&0x800F==0x8004){
+    else if((instruction&0xF00F)==0x8004){
         ADDVxVy();
     }
-    else if(instruction&0x800F==0x8005){
+    else if((instruction&0xF00F)==0x8005){
         SUB();
     }
-    else if(instruction&0x800F==0x8006){
+    else if((instruction&0xF00F)==0x8006){
         SHR();
     }
-    else if(instruction&0x800F==0x8007){
+    else if((instruction&0xF00F)==0x8007){
         SUBN();
     }
-    else if(instruction&0x800F==0x800E){
+    else if((instruction&0xF00F)==0x800E){
         SHL();
     }
-    else if(instruction&0x900F==0x9000){
+    else if((instruction&0xF00F)==0x9000){
         SNEVxVy();
     }
-    else if(instruction&0xA000==0xA002){
+    else if((instruction&0xF000)==0xA002){
         LDIAddr();
     }
-    else if(instruction&0xB000==0xB000){
+    else if((instruction&0xF000)==0xB000){
         JPV0Addr();
     }
-    else if(instruction&0xD000==0xD000){
+    else if((instruction&0xF000)==0xD000){
         DRW();
     }
-    else if(instruction&0xF0FF==0xE09E){
+    else if((instruction&0xF0FF)==0xE09E){
         SKP();
     }
-    else if(instruction&0xF0FF==0xE0A1){
+    else if((instruction&0xF0FF)==0xE0A1){
         SKNP();
     }
-    else if(instruction&0xF0FF==0xF007){
+    else if((instruction&0xF0FF)==0xF007){
         LDVxDT();
     }
-    else if(instruction&0xF0FF==0xF00A){
+    else if((instruction&0xF0FF)==0xF00A){
         LDVxK();
     }
-    else if(instruction&0xF0FF==0xF015){
+    else if((instruction&0xF0FF)==0xF015){
         LDDTVx();
     }
-    else if(instruction&0xF0FF==0xF018){
+    else if((instruction&0xF0FF)==0xF018){
         LDSTVx();
     }
-    else if(instruction&0xF0FF==0xF01E){
+    else if((instruction&0xF0FF)==0xF01E){
         ADDIVx();
     }
-    else if(instruction&0xF0FF==0xF029){
+    else if((instruction&0xF0FF)==0xF029){
         LDFVx();
     }
-    else if(instruction&0xF0FF==0xF033){
+    else if((instruction&0xF0FF)==0xF033){
         LDBVx();
     }
-    else if(instruction&0xF0FF==0xF055){
+    else if((instruction&0xF0FF)==0xF055){
         LDIVx();
     }
-    else if(instruction&0xF0FF==0xF065){
+    else if((instruction&0xF0FF)==0xF065){
         LDVxI();
     }
     
@@ -235,7 +235,11 @@ void CPU::OR(){
 
 void CPU::AND(){
 
-    Register[(instruction&0x0F00)>>8]&=instruction&0x00FF;
+    int index1=(instruction&0x0F00)>>8;
+    int index2=(instruction&0x00F0)>>4;
+
+
+    Register[index1]&=Register[index2];
 
     return;
 }; 
@@ -340,14 +344,13 @@ void CPU::DRW(){    //reads n bytes from index I and xors them into screen
     uint8_t sprite=0x00;    //the 8 bit seg currently being printed to display
     int x=(instruction&0x0F00)>>8;
     int y=(instruction&0x00F0)>>4;
-    int counter=0;  //the number of bits already processed to index display vector
 
     for(int i=0;i<bytes;i++){
+    int counter=0;  //the number of bits already processed to index display vector
         sprite=ram.read(index+i);
-
         for(int bit=0;bit<8;bit++){ //add every bit to display by XOR (as per spec)
             if((sprite&0x80)==0x80){
-                videoMemory[x+y*64+counter]=videoMemory[x+y*64+counter]^(sprite>>8);
+                (*videoMemory)[x+(y+i)*64+counter]=(*videoMemory)[x+(y+i)*64+counter]^((int)sprite>>7);
             }
             sprite=sprite<<1;
             counter++;
