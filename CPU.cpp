@@ -22,6 +22,110 @@ void CPU::fetch(){
 	PC++;
 }
 
+void CPU::execute(){    //determines what function to call based on instruction
+
+    if(instruction==0x00E0){
+        CLS();
+    }
+    else if(instruction==0x00EE){
+        RET();
+    }
+    else if(instruction&0x1000==0x1000){
+        JPAddr();
+    }
+    else if(instruction&0x2000==0x2000){
+        CALL();
+    }
+    else if(instruction&0x3000==0x3000){
+        SEVxByte();
+    }
+    else if(instruction&0x4000==0x4000){
+        SNEVxByte();
+    }
+    else if(instruction&0x5000==0x5000){
+        SEVxByte();
+    }
+    else if(instruction&0x6000==0x6000){
+        LDVxByte();
+    }
+    else if(instruction&0x7000==0x7000){
+        ADDVxByte();
+    }    
+    else if(instruction&0x800F==0x8000){
+        LDVxVy();
+    }
+    else if(instruction&0x800F==0x8001){
+        OR();
+    }
+    else if(instruction&0x800F==0x8002){
+        AND();
+    }
+    else if(instruction&0x800F==0x8003){
+        XOR();
+    }
+    else if(instruction&0x800F==0x8004){
+        ADDVxVy();
+    }
+    else if(instruction&0x800F==0x8005){
+        SUB();
+    }
+    else if(instruction&0x800F==0x8006){
+        SHR();
+    }
+    else if(instruction&0x800F==0x8007){
+        SUBN();
+    }
+    else if(instruction&0x800F==0x800E){
+        SHL();
+    }
+    else if(instruction&0x900F==0x9000){
+        SNEVxVy();
+    }
+    else if(instruction&0xA000==0xA002){
+        LDIAddr();
+    }
+    else if(instruction&0xB000==0xB000){
+        JPV0Addr();
+    }
+    else if(instruction&0xD000==0xD000){
+        DRW();
+    }
+    else if(instruction&0xF0FF==0xE09E){
+        SKP();
+    }
+    else if(instruction&0xF0FF==0xE0A1){
+        SKNP();
+    }
+    else if(instruction&0xF0FF==0xF007){
+        LDVxDT();
+    }
+    else if(instruction&0xF0FF==0xF00A){
+        LDVxK();
+    }
+    else if(instruction&0xF0FF==0xF015){
+        LDDTVx();
+    }
+    else if(instruction&0xF0FF==0xF018){
+        LDSTVx();
+    }
+    else if(instruction&0xF0FF==0xF01E){
+        ADDIVx();
+    }
+    else if(instruction&0xF0FF==0xF029){
+        LDFVx();
+    }
+    else if(instruction&0xF0FF==0xF033){
+        LDBVx();
+    }
+    else if(instruction&0xF0FF==0xF055){
+        LDIVx();
+    }
+    else if(instruction&0xF0FF==0xF065){
+        LDVxI();
+    }
+    
+}
+
 
 void CPU::PCToStack(){  //store PC in stack
     SP++;
@@ -261,9 +365,9 @@ void CPU::DRW(){    //reads n bytes from index I and xors them into screen
     for(int i=0;i<bytes;i++){
         sprite=ram->read(index+i);
 
-        for(int bit=0;bit<8;bit++){ //add every bit to display
+        for(int bit=0;bit<8;bit++){ //add every bit to display by XOR (as per spec)
             if((sprite&0x80)==0x80){
-                videoMemory[x+y*64+counter]=1;
+                videoMemory[x+y*64+counter]=videoMemory[x+y*64+counter]^(sprite>>8);
             }
             sprite=sprite<<1;
             counter++;

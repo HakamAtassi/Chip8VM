@@ -103,6 +103,7 @@ namespace chip8VM{
 
         public:
             CPU(RAM * _ram, std::vector<bool> _videoMemory);
+            void execute();
             
     };
 
