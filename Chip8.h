@@ -13,8 +13,8 @@ namespace chip8VM{
     class Chip8{
 
         private:
-            RAM* ram;
-            CPU cpu();
+            RAM *ram;
+            CPU* cpu;
             std::vector<bool> videoMemory;  //set bit indicates pixel at that address
     
         private:    //members for video rendering
@@ -25,22 +25,15 @@ namespace chip8VM{
 			SDL_Texture *texture;
             
 
-            
-
-
-        private:    //helper functions
-
-
-    
-
-
-        public:
-            Chip8(RAM * _ram);
-            void run();
-            void createWindow();
 			void printRam();
             void drawScreen(int x, int y);
             void drawPixel(int x, int y);
+
+        public:
+            Chip8(RAM * _ram, std::vector<bool>& _videoMemory);
+            void createWindow();
+
+            void run();
 
     };
 } //namespace chip8VM

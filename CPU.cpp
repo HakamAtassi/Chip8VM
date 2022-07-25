@@ -5,16 +5,21 @@
 
 using namespace chip8VM;
 
-
-CPU::CPU(RAM &_ram): ram(&_ram){    //the start up routine
-                                
+CPU::CPU(RAM * _ram, std::vector<bool> _videoMemory): ram(_ram), videoMemory(_videoMemory){    //the start up routine
+                      
     for(int i=0;i<4096;i++){
         ram->write(i, 0);
     }
 
     srand(time(NULL));
     std::vector<uint8_t> Register(18,0);    //[0-15]GP + DT + ST
-    std::vector<bool> display(2048,false);
+}
+
+void CPU::fetch(){
+	instruction=0x00FF&ram->read(PC);
+	PC++;
+	instruction|=0xFF00&ram->read(PC);
+	PC++;
 }
 
 
@@ -36,27 +41,32 @@ void CPU::PCFromtStack(){   //Get PC from TOS
 }
 
 
-void CPU::SYS(){     
+void CPU::SYS(){   
+	fetch();
                      //not used in modern interpreters
     PC=instruction & 0x0FFF; //mask top bit to 0. address is bottom 12 bits of instruction  
 };
 
 void CPU::CLS(){
+	fetch();
 
     
 };
 
 void CPU::RET(){    //return from subroutine
+	fetch();
     PCFromtStack();
     
 };
 
 void CPU::JPAddr(){
+	fetch();
     
     PC=instruction & 0x0FFF; //mask top bit to 0. address is bottom 12 bits of instruction  
 };
 
 void CPU::CALL(){   //call subroutine. not same as jump
+	fetch();
     
     PCToStack();
     PC=instruction&0x0FFF; //ignore top bit
@@ -66,6 +76,7 @@ void CPU::CALL(){   //call subroutine. not same as jump
 
 
 void CPU::SEVxByte(){
+	fetch();
 
     if(Register[(instruction&0x0F00)>>8]==(instruction&0x00FF)){
         PC++;
@@ -76,6 +87,7 @@ void CPU::SEVxByte(){
 };
 
 void CPU::SNEVxByte(){
+	fetch();
     if(Register[(instruction&0x0F00)>>8]!=(instruction&0x00FF)){
         PC++;
         PC++;
@@ -85,6 +97,7 @@ void CPU::SNEVxByte(){
 };
 
 void CPU::SEVxVy(){
+	fetch();
     if(Register[(instruction&0x0F00)>>8]==Register[instruction&0x00F0]){
         PC++;
         PC++;
@@ -94,12 +107,14 @@ void CPU::SEVxVy(){
 };
 
 void CPU::LDVxByte(){
+	fetch();
     Register[(instruction&0x0F00)>>8]=instruction&0x00FF;
 
     return;
 };
 
 void CPU::ADDVxByte(){
+	fetch();
 
     Register[(instruction&0x0F00)>>8]+=instruction&0x00FF;
 
@@ -107,6 +122,7 @@ void CPU::ADDVxByte(){
 };  
 
 void CPU::LDVxVy(){
+	fetch();
 
     Register[(instruction&0x0F00)>>8]=Register[(instruction&0x00F0)>>4];
 
@@ -114,6 +130,7 @@ void CPU::LDVxVy(){
 }; 
 
 void CPU::OR(){
+	fetch();
     
     Register[(instruction&0x0F00)>>8]|=instruction&0x00FF;
 
@@ -121,6 +138,7 @@ void CPU::OR(){
 };
 
 void CPU::AND(){
+	fetch();
 
     Register[(instruction&0x0F00)>>8]&=instruction&0x00FF;
 
@@ -128,6 +146,7 @@ void CPU::AND(){
 }; 
 
 void CPU::XOR(){
+	fetch();
 
     Register[(instruction&0x0F00)>>8]^=instruction&0x00FF;
 
@@ -135,6 +154,7 @@ void CPU::XOR(){
 }; 
 
 void CPU::ADDVxVy(){    //add Vx and Vy. Set VF if the value wraps around
+	fetch();
     
     uint16_t sum=Register[instruction&0x0F00]+Register[instruction&0x00F0];
     Register[instruction&0x0F00]=sum;
@@ -147,6 +167,7 @@ void CPU::ADDVxVy(){    //add Vx and Vy. Set VF if the value wraps around
 };   
 
 void CPU::SUB(){
+	fetch();
 
     Register[(instruction&0x0F00)>>8]=Register[(instruction&0x0F00)>>8]-Register[(instruction&0x00F0)>>4];
 
@@ -161,6 +182,7 @@ void CPU::SUB(){
 };
 
 void CPU::SHR(){
+	fetch();
     if((Register[(instruction&0x0F00)]&0x0001)==1){
         Register[15]=1;
     }
@@ -171,6 +193,7 @@ void CPU::SHR(){
 };   
 
 void CPU::SUBN(){
+	fetch();
  
     Register[(instruction&0x0F00)>>8]=Register[(instruction&0x00F0)>>4]-Register[(instruction&0x0F00)>>8];
 
@@ -185,6 +208,7 @@ void CPU::SUBN(){
 };  
 
 void CPU::SHL(){
+	fetch();
  
     if((Register[(instruction&0x0F00)]&0x8000)==0x8000){
         Register[15]=1;
@@ -197,6 +221,7 @@ void CPU::SHL(){
 };    
 
 void CPU::SNEVxVy(){
+	fetch();
     if(Register[(instruction&0x0F00)>>8]!=Register[instruction&0x00F0]){
         PC++;
         PC++;
@@ -206,6 +231,7 @@ void CPU::SNEVxVy(){
 };
 
 void CPU::LDIAddr(){
+	fetch();
 
     index=instruction&0x0FFF;
     return;
@@ -213,15 +239,18 @@ void CPU::LDIAddr(){
 }; 
 
 void CPU::JPV0Addr(){
+	fetch();
     PC=instruction&0x0FFF+Register[0];
 }; 
 
 void CPU::RND(){    //generate random number
+	fetch();
     
     Register[(instruction&0x0F00)>>8]=(rand()%0xF)&(instruction&0x00FF);    //possible error with mismatching sizes
 };
 
 void CPU::DRW(){    //reads n bytes from index I and xors them into screen
+	fetch();
 
     int bytes=(instruction&0x000F); //read display data
     uint8_t sprite=0x00;    //the 8 bit seg currently being printed to display
@@ -234,7 +263,7 @@ void CPU::DRW(){    //reads n bytes from index I and xors them into screen
 
         for(int bit=0;bit<8;bit++){ //add every bit to display
             if((sprite&0x80)==0x80){
-                display[x+y*64+counter]=1;
+                videoMemory[x+y*64+counter]=1;
             }
             sprite=sprite<<1;
             counter++;
@@ -245,46 +274,55 @@ void CPU::DRW(){    //reads n bytes from index I and xors them into screen
 };
 
 void CPU::SKP(){
+	fetch();
 
 };
 
 void CPU::SKNP(){
+	fetch();
 
 }; 
 
 void CPU::LDVxDT(){
+	fetch();
 
     Register[(instruction&0x0F00)>>8]=Register[16];
 
 };
 
 void CPU::LDVxK(){
+	fetch();
 
 };
 
 void CPU::LDDTVx(){
+	fetch();
     
     Register[16]=(instruction&0x0F00)>>8;
 
 }; 
 
 void CPU::LDSTVx(){
+	fetch();
 
     Register[17]=(instruction&0x0F00)>>8;
 
 };     
 
 void CPU::ADDIVx(){
+	fetch();
 
     index=index+Register[(instruction&0x0F00)>>8];
 
 };     
 
 void CPU::LDFVx(){
+	fetch();
 
 };
 
 void CPU::LDBVx(){
+	fetch();
     
     uint8_t Vx=Register[(instruction&0x0F00>>8)];
 
@@ -297,6 +335,7 @@ void CPU::LDBVx(){
 };    
 
 void CPU::LDIVx(){
+	fetch();
 
     for(int i=0;i<16;i++){
         ram->write(index+i,Register[i]);
@@ -305,6 +344,7 @@ void CPU::LDIVx(){
 };    
 
 void CPU::LDVxI(){
+	fetch();
 
     for(int i=0;i<16;i++){
         Register[i]=ram->read(index+i);
