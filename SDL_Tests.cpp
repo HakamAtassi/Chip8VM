@@ -27,7 +27,6 @@ void draw(int x, int y, SDL_Texture *texture, SDL_Renderer *renderer){	//
 	SDL_RenderCopy(renderer, texture, NULL, NULL);
 	SDL_RenderPresent(renderer);
 
-
 }
 
 
@@ -45,8 +44,9 @@ int main(int argc, char *argv[])
 
 		video_mem[0]=1;
 		video_mem[1]=1;
-
 		video_mem[2]=1;
+
+
         if (SDL_Init(SDL_INIT_VIDEO) < 0) {
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't initialize SDL: %s", SDL_GetError());
                 return 3;
@@ -74,7 +74,6 @@ int main(int argc, char *argv[])
 				//draw((video_mem[i]%64)*10, (i%64)*10, texture,renderer);
 				draw((i%64)*10,(i/64)*10, texture,renderer);
 
-				//draw(0,0, texture,renderer);
 			}
 		}
 
@@ -82,9 +81,9 @@ int main(int argc, char *argv[])
                 SDL_PollEvent(&event);
                 if(event.type == SDL_QUIT)
                         break;
-
-
         }
+		
+
         SDL_DestroyRenderer(renderer);
         SDL_Quit();
         return 0;

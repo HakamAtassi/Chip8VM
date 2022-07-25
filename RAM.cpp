@@ -1,6 +1,6 @@
 #include "RAM.h"
 #include <cstdint>
-
+#include <iostream>
 
 
 chip8VM::RAM::RAM(){
@@ -18,4 +18,14 @@ void chip8VM::RAM::write(uint16_t PC, uint8_t val){
 
 
     return;
+}
+
+void chip8VM::RAM::print(){
+
+	for(int i=0;i<4096;i++){
+		std::cout<<(int)read(i)<<", ";
+	}
+	std::cout<<"\n";
+
+
 }

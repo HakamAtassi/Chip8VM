@@ -17,6 +17,7 @@ namespace chip8VM{
             RAM();
             uint8_t read(uint16_t PC);  //reads the value at that exact address 
             void write(uint16_t PC, uint8_t val);   //writes data to address PC. returns nothing
+			void print();
 
     };
 
