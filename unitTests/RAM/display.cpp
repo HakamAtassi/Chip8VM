@@ -22,7 +22,7 @@ int main(){
 	ram.write(0x0203,0xFF);
 
 	std::vector<bool> * videoMemory=new std::vector<bool>(2048,0);
-	std::vector<bool> * keyboardInput=new std::vector<bool>(2048,0);
+	std::vector<bool> * keyboardInput=new std::vector<bool>(127,0);
 	
 	Chip8 chip8(ram,videoMemory,keyboardInput);
 
