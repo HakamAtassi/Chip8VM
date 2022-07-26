@@ -5,22 +5,27 @@
 #include <iostream>
 using namespace chip8VM;
 
-CPU::CPU(RAM & _ram, std::vector<bool> * _videoMemory): ram(_ram),videoMemory(_videoMemory){    //the start up routine          
+CPU::CPU(RAM & _ram, std::vector<bool> * _videoMemory, std::vector<bool> * _keyboardInput): ram(_ram),videoMemory(_videoMemory),
+keyboardInput(_keyboardInput){    //the start up routine        
     srand(time(NULL));
     registers=std::vector<uint8_t>(18,0);
 }
 
 void CPU::fetch(){
-    if(PC==0x0FFF){
+    if(PC>=0x0FFF){
         return;
     }
-	instruction=0x00FF&ram.read(PC);
+	instruction=ram.read(PC)<<8;    //lower address is MSB
 	PC++;
-	instruction|=0xFF00&(ram.read(PC)<<8);
+	instruction|=ram.read(PC);
 	PC++;
 }
 
 void CPU::execute(){    //determines what function to call based on instruction
+
+    if(PC>=0x0FFF){
+        return;
+    }
 
     if(instruction==0x00E0){
         CLS();
@@ -136,19 +141,17 @@ uint8_t CPU::getRegister(int reg){
 
 void CPU::PCToStack(){  //store PC in stack
     SP++;
-    ram.write(SP,(PC&0x00FF));
-    SP++;
     ram.write(SP,(PC&0xFF00)>>8);
-
+    SP++;
+    ram.write(SP,(PC&0x00FF));
 }
 
 
 void CPU::PCFromtStack(){   //Get PC from TOS
-
-    PC=(ram.read(SP)<<8)&0xFF00;
+    PC=ram.read(SP);
     SP--;
-    PC|=(ram.read(SP))&0x00FF;
-
+    PC|=(ram.read(SP)<<8);
+    SP--;
 }
 
 
@@ -166,26 +169,21 @@ void CPU::RET(){    //return from subroutine
 };
 
 void CPU::JPAddr(){
-    
     PC=instruction & 0x0FFF; //mask top bit to 0. address is bottom 12 bits of instruction  
 };
 
 void CPU::CALL(){   //call subroutine. not same as jump
-    
     PCToStack();
     PC=instruction&0x0FFF; //ignore top bit
-
     return;
 };
 
 
 void CPU::SEVxByte(){
-
     if(registers[(instruction&0x0F00)>>8]==(instruction&0x00FF)){
         PC++;
         PC++;
     }
-
     return;
 };
 
@@ -360,6 +358,7 @@ void CPU::DRW(){    //reads n bytes from index I and xors them into screen
     return;
 
 };
+
 
 void CPU::SKP(){
 

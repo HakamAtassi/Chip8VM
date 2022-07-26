@@ -14,7 +14,9 @@ namespace chip8VM{
         private:
             
             RAM ram;   //CPU needs a pointer to ram to get instruction
-            std::vector<bool> * videoMemory;    
+            std::vector<bool> * videoMemory;
+            std::vector<bool> * keyboardInput;
+
 
             uint16_t PC=0x0200;   //only lower 3 bytes used (2^12=4096)
             uint16_t SP=0x0000; //stack pointer
@@ -78,7 +80,9 @@ namespace chip8VM{
 
         public:
             CPU(){};
-            CPU(RAM & _ram, std::vector<bool> * _videoMemory);
+            CPU(RAM & _ram, std::vector<bool> * _videoMemory,
+            std::vector<bool> * _keyboardInput);
+
             void setRegister(int reg,uint8_t val);
             uint8_t getRegister(int reg);
             void fetch();		//updates instruction and increments PC

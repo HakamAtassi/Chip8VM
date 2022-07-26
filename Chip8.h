@@ -16,7 +16,8 @@ namespace chip8VM{
             RAM ram;
             CPU* cpu;
             std::vector<bool> * videoMemory;  //set bit indicates pixel at that address
-    
+            std::vector<bool> * keyboardInput;
+
         private:    //members for video rendering
 
 			SDL_Window *window;
@@ -27,6 +28,7 @@ namespace chip8VM{
 			void printRam();
             void drawPixels(int x, int y);
             void refreshDisplay();
+            void getInput();    //get keyboard input and pipe into SDL
 
         public: //test functions
             void setRegister(int reg,uint8_t val);
@@ -34,7 +36,9 @@ namespace chip8VM{
             void fetchExecute();
 
         public:
-            Chip8(RAM & _ram, std::vector<bool> * _videoMemory);
+            Chip8(RAM & _ram, std::vector<bool> * _videoMemory,
+            std::vector<bool> * _keyboardInput);
+
             void createWindow();
             void run();
 

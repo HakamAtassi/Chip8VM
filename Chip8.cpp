@@ -13,8 +13,9 @@
 
 using namespace chip8VM;
 
-Chip8::Chip8(RAM & _ram, std::vector<bool> * _videoMemory): ram(_ram), videoMemory(_videoMemory){
-	cpu=new CPU(_ram,_videoMemory);
+Chip8::Chip8(RAM & _ram, std::vector<bool> * _videoMemory, std::vector<bool> * _keyboardInput): ram(_ram), videoMemory(_videoMemory)
+,keyboardInput(_keyboardInput){
+	cpu=new CPU(_ram,_videoMemory, _keyboardInput);
 }
 
 void Chip8::createWindow(){
@@ -66,11 +67,37 @@ void Chip8::refreshDisplay(){
 	}
 }
 
+void Chip8::getInput(){
+	SDL_Event event;
+
+	while(SDL_PollEvent(&event)){
+		switch (event.type)
+		{
+		case SDL_KEYDOWN:
+			printf("keypress detected\n");
+			return;
+			break;
+
+		case SDL_KEYUP:
+			printf("key release detected\n");
+			return;
+		
+		default:
+			return;
+			break;
+		}
+	}
+
+}
+
+
+
 void Chip8::run(){
 
 	while(1){
 		fetchExecute();
 		refreshDisplay();
+		getInput();
 
 		SDL_PollEvent(&event);
 		if(event.type == SDL_QUIT){
@@ -99,4 +126,3 @@ void Chip8::setRegister(int reg,uint8_t val){
 uint8_t Chip8::getRegister(int reg){
 	return cpu->getRegister(reg);
 }
-
