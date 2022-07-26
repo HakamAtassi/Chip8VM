@@ -24,16 +24,14 @@ namespace chip8VM{
 			SDL_Renderer *renderer;
 			SDL_Texture *texture;
             
-
 			void printRam();
-            void drawScreen(int x, int y);
-            void drawPixel(int x, int y);
+            void drawPixels(int x, int y);
+            void refreshDisplay();
 
         public: //test functions
             void setRegister(int reg,uint8_t val);
             uint8_t getRegister(int reg);
-
-
+            void fetchExecute();
 
         public:
             Chip8(RAM & _ram, std::vector<bool> * _videoMemory);
