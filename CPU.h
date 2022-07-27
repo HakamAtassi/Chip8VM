@@ -13,7 +13,7 @@ namespace chip8VM{
         //data is Big-Endian. Largest address is MSB
         private:
             
-            RAM ram;   //CPU needs a pointer to ram to get instruction
+            RAM * ram;   //CPU needs a pointer to ram to get instruction
             std::vector<bool> * videoMemory;
             std::vector<bool> * keyboardInput;
 
@@ -22,6 +22,7 @@ namespace chip8VM{
             uint16_t SP=0x0000; //stack pointer
             uint16_t index=0x0000;
             std::vector<uint8_t> registers;    //[0-15]GP + DT + ST
+
 
                         /**RAM RANGES**/
             /*
@@ -80,8 +81,10 @@ namespace chip8VM{
 
         public:
             CPU(){};
-            CPU(RAM & _ram, std::vector<bool> * _videoMemory,
+            CPU(RAM * _ram, std::vector<bool> * _videoMemory,
             std::vector<bool> * _keyboardInput);
+
+
 
             void setRegister(int reg,uint8_t val);
             uint8_t getRegister(int reg);

@@ -3,21 +3,26 @@
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
+
+#define FONTSET_ADDRESS 0x50
 using namespace chip8VM;
 
-CPU::CPU(RAM & _ram, std::vector<bool> * _videoMemory, std::vector<bool> * _keyboardInput): ram(_ram),videoMemory(_videoMemory),
+CPU::CPU(RAM * _ram, std::vector<bool> * _videoMemory, std::vector<bool> * _keyboardInput): ram(_ram),videoMemory(_videoMemory),
 keyboardInput(_keyboardInput){    //the start up routine        
     srand(time(NULL));
     registers=std::vector<uint8_t>(18,0);
+
+
+
 }
 
 void CPU::fetch(){
     if(PC>=0x0FFF){
         return;
     }
-	instruction=ram.read(PC)<<8;    //lower address is MSB
+	instruction=ram->read(PC)<<8;    //lower address is MSB
 	PC++;
-	instruction|=ram.read(PC);
+	instruction|=ram->read(PC);
 	PC++;
 }
 
@@ -126,9 +131,9 @@ void CPU::execute(){    //determines what function to call based on instruction
     else if((instruction&0xF0FF)==0xF065){
         LDVxI();
     }
-
-    
 }
+
+
 void CPU::setRegister(int reg,uint8_t val){
     std::cout<<"Writing "<<(int)val<<" to register "<<(int)reg<<"\n";
     registers[reg]=val;
@@ -141,16 +146,16 @@ uint8_t CPU::getRegister(int reg){
 
 void CPU::PCToStack(){  //store PC in stack
     SP++;
-    ram.write(SP,(PC&0xFF00)>>8);
+    ram->write(SP,(PC&0xFF00)>>8);
     SP++;
-    ram.write(SP,(PC&0x00FF));
+    ram->write(SP,(PC&0x00FF));
 }
 
 
 void CPU::PCFromtStack(){   //Get PC from TOS
-    PC=ram.read(SP);
+    PC=ram->read(SP);
     SP--;
-    PC|=(ram.read(SP)<<8);
+    PC|=(ram->read(SP)<<8);
     SP--;
 }
 
@@ -160,7 +165,11 @@ void CPU::SYS(){
     PC=instruction & 0x0FFF; //mask top bit to 0. address is bottom 12 bits of instruction  
 };
 
+
 void CPU::CLS(){
+    for(int i=0;i<4096;i++){
+        (*videoMemory)[i]=0;
+    }
 };
 
 void CPU::RET(){    //return from subroutine
@@ -201,42 +210,36 @@ void CPU::SEVxVy(){
         PC++;
         PC++;
     }
-
     return;
 };
 
 void CPU::LDVxByte(){
     registers[(instruction&0x0F00)>>8]=instruction&0x00FF;
-
     return;
 };
 
 void CPU::ADDVxByte(){
-
     registers[(instruction&0x0F00)>>8]+=instruction&0x00FF;
-
     return;
 };  
 
 void CPU::LDVxVy(){
-
     registers[(instruction&0x0F00)>>8]=registers[(instruction&0x00F0)>>4];
-
     return;
 }; 
 
 void CPU::OR(){
-    
-    registers[(instruction&0x0F00)>>8]|=instruction&0x00FF;
+    int index1=(instruction&0x0F00)>>8;
+    int index2=(instruction&0x00F0)>>4;
+
+    registers[index1]|=registers[index2];
 
     return;
 };
 
 void CPU::AND(){
-
     int index1=(instruction&0x0F00)>>8;
     int index2=(instruction&0x00F0)>>4;
-
 
     registers[index1]&=registers[index2];
 
@@ -244,23 +247,22 @@ void CPU::AND(){
 }; 
 
 void CPU::XOR(){
+    int index1=(instruction&0x0F00)>>8;
+    int index2=(instruction&0x00F0)>>4;
 
-    registers[(instruction&0x0F00)>>8]^=instruction&0x00FF;
+    registers[index1]^=registers[index2];
 
     return;
 }; 
 
 void CPU::ADDVxVy(){    //add Vx and Vy. Set VF if the value wraps around
-    
-    uint16_t sum=registers[instruction&0x0F00]+registers[instruction&0x00F0];
-    registers[instruction&0x0F00]=sum;
+    uint16_t sum=registers[(instruction&0x0F00)>>8]+registers[(instruction&0x00F0)>>4];
+    registers[(instruction&0x0F00)>>8]=sum;
 
     if(sum>255){
         registers[15]=1; //set VF to 1 if overflow
     }
-
-
-};   
+};
 
 void CPU::SUB(){
 
@@ -277,13 +279,15 @@ void CPU::SUB(){
 };
 
 void CPU::SHR(){
-    if((registers[(instruction&0x0F00)]&0x0001)==1){
+    int index=(instruction&0x0F00)>>8;
+
+    if((registers[index]&0x0001)==1){
         registers[15]=1;
     }
     else{
         registers[15]=0;
     }
-    registers[(instruction&0x0F00)]=registers[(instruction&0x0F00)]>>1;
+    registers[(index)>>8]=registers[(index)>>8]>>1;
 };   
 
 void CPU::SUBN(){
@@ -301,19 +305,25 @@ void CPU::SUBN(){
 };  
 
 void CPU::SHL(){
- 
-    if((registers[(instruction&0x0F00)]&0x8000)==0x8000){
+    int index=(instruction&0x0F00)>>8;
+
+    if((registers[index]&0x8000)==0x8000){
         registers[15]=1;
     }
     else{
         registers[15]=0;
     }
-    registers[(instruction&0x0F00)]=registers[(instruction&0x0F00)]<<1;
+    registers[index]=registers[index]<<1;
     return;
 };    
 
+
 void CPU::SNEVxVy(){
-    if(registers[(instruction&0x0F00)>>8]!=registers[instruction&0x00F0]){
+    int index1=(instruction&0x0F00)>>8;
+    int index2=(instruction&0x00F0)>>4;
+    
+
+    if(registers[index1]!=registers[index2]){
         PC++;
         PC++;
     }
@@ -333,8 +343,8 @@ void CPU::JPV0Addr(){
 }; 
 
 void CPU::RND(){    //generate random number
-    
-    registers[(instruction&0x0F00)>>8]=(rand()%0xF)&(instruction&0x00FF);    //possible error with mismatching sizes
+    int index1=(instruction&0x0F00)>>8;
+    registers[index1]=(rand()%0xF)&(instruction&0x00FF);    //possible error with mismatching sizes
 };
 
 void CPU::DRW(){    //reads n bytes from index I and xors them into screen
@@ -344,11 +354,17 @@ void CPU::DRW(){    //reads n bytes from index I and xors them into screen
     int x=(instruction&0x0F00)>>8;
     int y=(instruction&0x00F0)>>4;
 
+    int VFCount=0;
+
     for(int i=0;i<bytes;i++){
     int counter=0;  //the number of bits already processed to index display vector
-        sprite=ram.read(index+i);
+        sprite=ram->read(index+i);
         for(int bit=0;bit<8;bit++){ //add every bit to display by XOR (as per spec)
             if((sprite&0x80)==0x80){
+                if(VFCount==0 && ((*videoMemory)[x+(y+i)*64+counter]&((int)sprite>>7))==1){   //set VF is a pixel is disabled
+                    registers[0x0f]=1;
+                    VFCount++;
+                }
                 (*videoMemory)[x+(y+i)*64+counter]=(*videoMemory)[x+(y+i)*64+counter]^((int)sprite>>7);
             }
             sprite=sprite<<1;
@@ -356,16 +372,25 @@ void CPU::DRW(){    //reads n bytes from index I and xors them into screen
         }
     }
     return;
-
 };
 
 
-void CPU::SKP(){
-
+void CPU::SKP(){    //if key with value in Vx is pressed, skip next instruction
+    int Vx=(instruction&0x0F00)>>8;
+    if((*keyboardInput)[registers[Vx]]==true){
+        PC++;
+        PC++;
+    }
+    return;
 };
 
 void CPU::SKNP(){
-
+    int Vx=(instruction&0x0F00)>>8;
+    if((*keyboardInput)[registers[Vx]]!=true){
+        PC++;
+        PC++;
+    }
+    return;
 }; 
 
 void CPU::LDVxDT(){
@@ -374,61 +399,57 @@ void CPU::LDVxDT(){
 
 };
 
-void CPU::LDVxK(){
+void CPU::LDVxK(){  //wait for keypress
+    int Vx=(instruction&0x0F00)>>8;
 
+    while(1){
+        for(int i=0;i<(*keyboardInput).size();i++){
+            if((*keyboardInput)[i]==1){
+                registers[Vx]=i;
+            }
+        }
+    }
 };
 
 void CPU::LDDTVx(){
-  
     registers[16]=(instruction&0x0F00)>>8;
 
 }; 
 
 void CPU::LDSTVx(){
-	
-
     registers[17]=(instruction&0x0F00)>>8;
-
 };     
 
 void CPU::ADDIVx(){
-
-
     index=index+registers[(instruction&0x0F00)>>8];
-
 };     
 
 void CPU::LDFVx(){
-
-
+    int Vx=(instruction&0x0F00)>>8;
+    index=FONTSET_ADDRESS+registers[Vx]*5;
 };
 
 void CPU::LDBVx(){
-
-    
     uint8_t Vx=registers[(instruction&0x0F00>>8)];
 
-    ram.write(index+2,Vx%10);
+    ram->write(index+2,Vx%10);
     Vx=Vx/10;
-    ram.write(index+1,Vx%10);
+    ram->write(index+1,Vx%10);
     Vx=Vx/10;
-    ram.write(index,Vx%10);
+    ram->write(index,Vx%10);
 
 };    
 
 void CPU::LDIVx(){
-
-
     for(int i=0;i<16;i++){
-        ram.write(index+i,registers[i]);
+        ram->write(index+i,registers[i]);
     }
 
 };    
 
 void CPU::LDVxI(){
     for(int i=0;i<16;i++){
-        registers[i]=ram.read(index+i);
+        registers[i]=ram->read(index+i);
     }
     return;
-};  
-
+};

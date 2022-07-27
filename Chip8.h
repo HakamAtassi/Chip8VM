@@ -2,8 +2,10 @@
 #define CHIP8_H_
 #include "CPU.h"
 #include "RAM.h"
-#include <vector>
+
 #include "SDL2/SDL.h"
+#include <string>
+#include <vector>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_render.h>
 #include <iostream>
@@ -13,8 +15,8 @@ namespace chip8VM{
     class Chip8{
 
         private:
-            RAM ram;
-            CPU* cpu;
+            RAM * ram;
+            CPU * cpu;
             std::vector<bool> * videoMemory;  //set bit indicates pixel at that address
             std::vector<bool> * keyboardInput;
 
@@ -25,7 +27,6 @@ namespace chip8VM{
 			SDL_Renderer *renderer;
 			SDL_Texture *texture;
             
-			void printRam();
             void drawPixels(int x, int y);
             void refreshDisplay();
             void getInput();    //get keyboard input and pipe into SDL
@@ -35,12 +36,17 @@ namespace chip8VM{
             uint8_t getRegister(int reg);
             void fetchExecute();
 
+
         public:
-            Chip8(RAM & _ram, std::vector<bool> * _videoMemory,
+            Chip8(RAM * _ram, std::vector<bool> * _videoMemory,
             std::vector<bool> * _keyboardInput);
 
+
+
+            void printRam();
             void createWindow();
             void run();
+
 
     };
 } //namespace chip8VM
