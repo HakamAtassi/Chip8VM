@@ -44,6 +44,19 @@ Chip8::Chip8(RAM * _ram, std::vector<bool> * _videoMemory, std::vector<bool> * _
     for(int i=0;i<80;i++){
 		ram->write(FONTSET_ADDRESS+i,fontset[i]);
     }
+
+
+	r.w = PIXELSIZE; //pixel size
+	r.h = PIXELSIZE;
+}
+
+
+Chip8::~Chip8(){
+	SDL_DestroyTexture(texture);
+	SDL_DestroyRenderer(renderer);
+	SDL_DestroyWindow(window);
+	SDL_Quit();
+
 }
 
 void Chip8::createWindow(){
@@ -62,24 +75,34 @@ void Chip8::createWindow(){
 		renderer = SDL_CreateRenderer(window, -1, 0);
 
 		texture = SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET,640,320);
+
+
 }
 
 void Chip8::drawPixels(int x, int y,int index){
-		SDL_Rect r;
-
-		r.w = PIXELSIZE; //pixel size
-		r.h = PIXELSIZE;
 
 		r.x=x*PIXELSIZE;
 		r.y=y*PIXELSIZE;
 
-		SDL_SetRenderTarget(renderer, texture);
-		SDL_SetRenderDrawColor(renderer, (*videoMemory)[index]*255, (*videoMemory)[index]*255, (*videoMemory)[index]*255, 0x00);
 
+		//SDL_SetRenderTarget(renderer, texture);
+		//SDL_SetRenderDrawColor(renderer, (*videoMemory)[index]*255, 
+		//(*videoMemory)[index]*255 ,(*videoMemory)[index]*255, 0x00);
+		//SDL_RenderFillRect(renderer, &r);
+		//SDL_SetRenderTarget(renderer, NULL);
+		//SDL_RenderCopy(renderer, texture, NULL, NULL);
+		//SDL_RenderPresent(renderer);
+
+
+
+		SDL_SetRenderTarget(renderer, texture);
+
+		SDL_RenderDrawRect(renderer,&r);
+		
+		SDL_SetRenderDrawColor(renderer, (*videoMemory)[index]*255, 
+		(*videoMemory)[index]*255 ,(*videoMemory)[index]*255, 0x00);
 		SDL_RenderFillRect(renderer, &r);
-		SDL_SetRenderTarget(renderer, NULL);
-		SDL_RenderCopy(renderer, texture, NULL, NULL);
-		SDL_RenderPresent(renderer);
+
 }
 
 
@@ -92,21 +115,19 @@ void Chip8::refreshDisplay(){
 	for(int i=0;i<2048;i++){	//refresh screen
 		drawPixels((i%64),(i/64),i);
 	}
+		SDL_SetRenderTarget(renderer, NULL);
+		SDL_RenderCopy(renderer, texture, NULL, NULL);
+		SDL_RenderPresent(renderer);
+
 }
 
 void Chip8::getInput(){
 	SDL_Event event;
 	while(SDL_PollEvent(&event)){
 		switch (event.type){
-
 			case SDL_KEYDOWN:
 				switch (event.key.keysym.sym){
-				case SDLK_ESCAPE:
-					printf("Quit\n");
-					SDL_DestroyRenderer(renderer);
-					SDL_Quit();
-					return;
-					break;
+
 
 				case SDLK_0:
 					printf("0 pressed\n");
@@ -549,7 +570,6 @@ void Chip8::getInput(){
 					
 				default:
 					break;
-			
 			}
 		}
 	}
@@ -558,19 +578,41 @@ void Chip8::getInput(){
 
 
 void Chip8::run(){
+
+/*
+	SDL_Event event;
+	while(SDL_PollEvent(&event)){
+		switch (event.type){
+			case SDL_KEYDOWN:
+				switch (event.key.keysym.sym){
+				case SDLK_ESCAPE:
+					printf("Quit\n");
+					SDL_DestroyRenderer(renderer);
+					SDL_Quit();
+					return;
+					break;
+*/
+
+	SDL_Event eventMain;
+
 	while(1){
 		fetchExecute();
 		refreshDisplay();
 		getInput();
 
-		SDL_PollEvent(&event);
-		if(event.type == SDL_QUIT){
+
+		SDL_PollEvent(&eventMain);
+		if(eventMain.type == SDL_QUIT)
 				break;
-		}
+
 	}
 
 	SDL_DestroyRenderer(renderer);
+	SDL_DestroyTexture(texture);
+	SDL_DestroyRenderer(renderer);
+	SDL_DestroyWindow(window);
 	SDL_Quit();
+
 }
 
 
@@ -579,11 +621,7 @@ void Chip8::run(){
 
 void Chip8::printRam(){
 	for(int i=0;i<4098;i++){
-		printf("%d:%X ",i,ram->read(i));
-
-		//std::cout<<(int)ram->read(i)<<" ";
 	}
-	std::cout<<"\n";
 }
 
 

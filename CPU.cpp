@@ -3,6 +3,9 @@
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
+#include <stdlib.h>
+#include <time.h>
+
 
 #define FONTSET_ADDRESS 0x50
 using namespace chip8VM;
@@ -13,7 +16,18 @@ keyboardInput(_keyboardInput){    //the start up routine
     registers=std::vector<uint8_t>(18,0);
 
 
+}
 
+void CPU::decrementDT(){
+    if(registers[16]>0){
+        registers[16]--;
+    }
+}
+
+void CPU::decrementST(){
+    if(registers[17]>0){
+        registers[17]--;
+    }
 }
 
 void CPU::fetch(){
@@ -135,7 +149,6 @@ void CPU::execute(){    //determines what function to call based on instruction
 
 
 void CPU::setRegister(int reg,uint8_t val){
-    std::cout<<"Writing "<<(int)val<<" to register "<<(int)reg<<"\n";
     registers[reg]=val;
 }
 
@@ -158,6 +171,7 @@ void CPU::PCFromtStack(){   //Get PC from TOS
     PC|=(ram->read(SP)<<8);
     SP--;
 }
+
 
 
 void CPU::SYS(){   
@@ -265,7 +279,6 @@ void CPU::ADDVxVy(){    //add Vx and Vy. Set VF if the value wraps around
 };
 
 void CPU::SUB(){
-
     registers[(instruction&0x0F00)>>8]=registers[(instruction&0x0F00)>>8]-registers[(instruction&0x00F0)>>4];
 
     if(registers[(instruction&0x0F00)>>8]>registers[(instruction&0x00F0)>>4]){
@@ -291,7 +304,6 @@ void CPU::SHR(){
 };   
 
 void CPU::SUBN(){
- 
     registers[(instruction&0x0F00)>>8]=registers[(instruction&0x00F0)>>4]-registers[(instruction&0x0F00)>>8];
 
     if(registers[(instruction&0x00F0)>>4]>registers[(instruction&0x0F00)>>8]){
@@ -334,7 +346,6 @@ void CPU::SNEVxVy(){
 };
 
 void CPU::LDIAddr(){
-
     index=instruction&0x0FFF;
     return;
 
@@ -434,7 +445,7 @@ void CPU::LDFVx(){
 };
 
 void CPU::LDBVx(){
-    uint8_t Vx=registers[(instruction&0x0F00>>8)];
+    uint8_t Vx=registers[(instruction&0x0F00)>>8];
 
     ram->write(index+2,Vx%10);
     Vx=Vx/10;
@@ -450,7 +461,8 @@ void CPU::LDIVx(){
 
 	for (uint8_t i = 0; i <= Vx; i++)
 	{
-        ram->write(index+i,registers[i]);
+        ram->write(index,registers[i]);
+        index++;
 	}
 
 
@@ -461,7 +473,8 @@ void CPU::LDVxI(){
     int x=(instruction&0x0F00)>>8;
 
     for(int i=0;i<=x;i++){
-        registers[i]=ram->read(index+i);
+        registers[i]=ram->read(index);
+        index++;
     }
     return;
 };

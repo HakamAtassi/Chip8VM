@@ -25,10 +25,7 @@ void chip8VM::RAM::write(uint16_t PC, uint8_t val){
 }
 
 void chip8VM::RAM::print(){
-	for(int i=0;i<4096;i++){
-		std::cout<<(int)read(i)<<", ";
-	}
-	std::cout<<"\n";
+
 }
 
 void chip8VM::RAM::loadRom(std::string rom){
