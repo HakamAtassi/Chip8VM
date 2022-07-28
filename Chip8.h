@@ -14,43 +14,33 @@ namespace chip8VM{
     
     class Chip8{
 
-        private:
-            RAM * ram;
-            CPU * cpu;
-            std::vector<bool> * videoMemory;  //set bit indicates pixel at that address
-            std::vector<bool> * keyboardInput;
+        public: //interface
+            Chip8();
+            ~Chip8();
+            void loadRom(std::string rom);
+            void run();
 
-        private:    //members for video rendering
+        private:    //member variables
+            CPU cpu;
+            std::vector<bool>keyboardInput;
 
-			SDL_Window *window;
+
+            SDL_Window *window;
 			SDL_Event event;
 			SDL_Renderer *renderer;
 			SDL_Texture *texture;
-            
             SDL_Rect r;
 
-            
+        private:    //members for video rendering
+
             void drawPixels(int x, int y,int index);
             void refreshDisplay();
-            void getInput();    //get keyboard input and pipe into SDL
+            void getInput();    
 
 
+        private: //test functions
 
-        public: //test functions
-            void setRegister(int reg,uint8_t val);
-            uint8_t getRegister(int reg);
             void fetchExecute();
-
-
-        public:
-            Chip8(RAM * _ram, std::vector<bool> * _videoMemory,
-            std::vector<bool> * _keyboardInput);
-            ~Chip8();
-
-            void printRam();
-            void createWindow();
-            void run();
-
 
     };
 } //namespace chip8VM

@@ -10,37 +10,27 @@
 namespace chip8VM{
     
     class CPU{
+
+        public:
+            CPU();
+
         //data is Big-Endian. Largest address is MSB
         private:
-            
-            RAM * ram;   //CPU needs a pointer to ram to get instruction
-            std::vector<bool> * videoMemory;
-            std::vector<bool> * keyboardInput;
-
+            RAM ram;
+            std::vector<bool> videoMemory;
+            std::vector<uint8_t> registers;    //[0-15]GP + DT + ST
+            std::vector<bool> keyboardInput;
 
             uint16_t SP=0x0000; //stack pointer
             uint16_t index=0x0000;
-            std::vector<uint8_t> registers;    //[0-15]GP + DT + ST
 
-			public:
-				uint16_t PC=0x0200;   //only lower 3 bytes used (2^12=4096)
+
+        public:
+            uint16_t PC=0x0200;   //only lower 3 bytes used (2^12=4096)
 
 
 
         private: //function vector table
-
-			/*
-            std::vector<void (CPU::*)(void)> opcodes={
-                &CPU::SYS,&CPU::CLS,&CPU::RET,&CPU::JPAddr,
-                &CPU::CALL,&CPU::SEVxByte,&CPU::SNEVxByte,&CPU::SEVxVy,
-                &CPU::LDVxByte,&CPU::ADDVxByte,&CPU::LDVxVy,&CPU::OR,
-                &CPU::AND,&CPU::XOR,&CPU::ADDVxVy,&CPU::SUB,
-                &CPU::SHR,&CPU::SUBN,&CPU::SHL,&CPU::SNEVxVy,
-                &CPU::LDIAddr,&CPU::JPV0Addr,&CPU::RND,&CPU::DRW,
-                &CPU::SKP,&CPU::SKNP,&CPU::LDVxDT,&CPU::LDVxK,
-                &CPU::LDDTVx,&CPU::LDSTVx,&CPU::ADDIVx,&CPU::LDFVx,
-                &CPU::LDBVx,&CPU::LDIVx,&CPU::LDVxI};   
-			*/
 
                         /**RAM RANGES**/
             /*
@@ -98,17 +88,16 @@ namespace chip8VM{
 
 
         public:
-            CPU(){};
-            CPU(RAM * _ram, std::vector<bool> * _videoMemory,
-            std::vector<bool> * _keyboardInput);
+
             void decrementDT();   //decrement DT and ST
             void decrementST();   //decrement DT and ST
+            void loadRom(std::string rom);
 
-
-            void setRegister(int reg,uint8_t val);
-            uint8_t getRegister(int reg);
+            bool getVideoMemory(int index);
             void fetch();		//updates instruction and increments PC
             void execute();
+
+            void setKeyboardInput(std::vector<bool> keyboardInput);
 
     };
 }   //namespace chip8VM

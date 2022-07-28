@@ -5,18 +5,56 @@
 #include <iostream>
 #include <stdlib.h>
 #include <time.h>
+#include <fstream>
 
 
 #define FONTSET_ADDRESS 0x50
+#define START_ADDRESS 0x200
+
 using namespace chip8VM;
 
-CPU::CPU(RAM * _ram, std::vector<bool> * _videoMemory, std::vector<bool> * _keyboardInput): ram(_ram),videoMemory(_videoMemory),
-keyboardInput(_keyboardInput){    //the start up routine        
+
+
+
+CPU::CPU(){    //the start up routine        
     srand(time(NULL));
+
+    ram=RAM();
     registers=std::vector<uint8_t>(18,0);
+    videoMemory=std::vector<bool>(2048,0);
+    keyboardInput=std::vector<bool>(128);
 
+    std::vector<uint8_t> fontset
+    {
+        0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+        0x20, 0x60, 0x20, 0x20, 0x70, // 1
+        0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+        0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+        0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+        0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+        0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+        0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+        0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+        0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+        0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+        0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+        0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+        0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+        0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+        0xF0, 0x80, 0xF0, 0x80, 0x80  // F
+	};
 
+    for(int i=0;i<80;i++){
+		ram.write(FONTSET_ADDRESS+i,fontset[i]);
+    }
 }
+
+void CPU::setKeyboardInput(std::vector<bool> _keyboardInput){
+    keyboardInput=_keyboardInput;
+    //printf("new keyboardInput set\n");
+}
+
+
 
 void CPU::decrementDT(){
     if(registers[16]>0){
@@ -30,13 +68,34 @@ void CPU::decrementST(){
     }
 }
 
+void CPU::loadRom(std::string rom){
+    std::ifstream file(rom, std::ios::binary | std::ios::ate);
+
+	if (file.is_open())
+	{
+		std::streampos size = file.tellg();
+		char* buffer = new char[size];
+
+		file.seekg(0, std::ios::beg);
+		file.read(buffer, size);
+		file.close();
+
+		for (long i = 0; i < size; ++i)
+		{
+			//memory[START_ADDRESS + i]=buffer[i];
+			ram.write(START_ADDRESS + i,buffer[i]);
+		}
+		delete[] buffer;
+	}
+}
+
 void CPU::fetch(){
     if(PC>=0x0FFF){
         return;
     }
-	instruction=ram->read(PC)<<8;    //lower address is MSB
+	instruction=ram.read(PC)<<8;    //lower address is MSB
 	PC++;
-	instruction|=ram->read(PC);
+	instruction|=ram.read(PC);
 	PC++;
 }
 
@@ -148,30 +207,26 @@ void CPU::execute(){    //determines what function to call based on instruction
 }
 
 
-void CPU::setRegister(int reg,uint8_t val){
-    registers[reg]=val;
-}
 
-uint8_t CPU::getRegister(int reg){
-    return registers[reg];
+bool CPU::getVideoMemory(int index){
+    return videoMemory[index];
 }
 
 
 void CPU::PCToStack(){  //store PC in stack
     SP++;
-    ram->write(SP,(PC&0xFF00)>>8);
+    ram.write(SP,(PC&0xFF00)>>8);
     SP++;
-    ram->write(SP,(PC&0x00FF));
+    ram.write(SP,(PC&0x00FF));
 }
 
 
 void CPU::PCFromtStack(){   //Get PC from TOS
-    PC=ram->read(SP);
+    PC=ram.read(SP);
     SP--;
-    PC|=(ram->read(SP)<<8);
+    PC|=(ram.read(SP)<<8);
     SP--;
 }
-
 
 
 void CPU::SYS(){   
@@ -179,10 +234,9 @@ void CPU::SYS(){
     PC=instruction & 0x0FFF; //mask top bit to 0. address is bottom 12 bits of instruction  
 };
 
-
 void CPU::CLS(){
     for(int i=0;i<2048;i++){
-        (*videoMemory)[i]=0;
+        videoMemory[i]=0;
     }
 };
 
@@ -373,16 +427,15 @@ void CPU::DRW(){    //reads n bytes from index I and xors them into screen
     registers[15]=0;
 
     for(int i=0;i<bytes;i++){   //reads byte at index+i (ie: 0x00001111)
-        sprite=ram->read(index+i);
+        sprite=ram.read(index+i);
         //write sprite into correct index in videoMemory
         for(int j=0;j<8;j++){
             int topBit=(int)sprite/128;
             int vIndex=x+(y+i)*64+j;
-            if(((*videoMemory)[vIndex]&topBit)==1 && VFCount==0){
+            if((videoMemory[vIndex]&topBit)==1 && VFCount==0){
                 registers[15]=1;
             }
-            (*videoMemory)[vIndex]=(*videoMemory)[vIndex]^topBit;
-            //printVec(*videoMemory);
+            videoMemory[vIndex]=videoMemory[vIndex]^topBit;
             sprite=sprite<<1;
         }
     }
@@ -392,7 +445,8 @@ void CPU::DRW(){    //reads n bytes from index I and xors them into screen
 
 void CPU::SKP(){    //if key with value in Vx is pressed, skip next instruction
     int Vx=(instruction&0x0F00)>>8;
-    if((*keyboardInput)[registers[Vx]]==true){
+
+    if(keyboardInput[registers[Vx]]==true){
         PC++;
         PC++;
     }
@@ -400,13 +454,18 @@ void CPU::SKP(){    //if key with value in Vx is pressed, skip next instruction
 };
 
 void CPU::SKNP(){
+    
     int Vx=(instruction&0x0F00)>>8;
-    if((*keyboardInput)[registers[Vx]]!=true){
+
+    if(keyboardInput[registers[Vx]]!=true){
         PC++;
         PC++;
     }
     return;
+    
 }; 
+
+
 
 void CPU::LDVxDT(){
 
@@ -414,16 +473,21 @@ void CPU::LDVxDT(){
 
 };
 
-void CPU::LDVxK(){  //wait for keypress
-    int Vx=(instruction&0x0F00)>>8;
 
-    while(1){
-        for(int i=0;i<(*keyboardInput).size();i++){
-            if((*keyboardInput)[i]==1){
+void CPU::LDVxK(){  //wait for keypress
+
+    int Vx=(instruction&0x0F00)>>8;
+    int flag=0;
+
+    while(flag==0){
+        for(int i=0;i<keyboardInput.size();i++){
+            if(keyboardInput[i]==1){
                 registers[Vx]=i;
+                flag=1;
             }
         }
     }
+    
 };
 
 void CPU::LDDTVx(){
@@ -447,11 +511,11 @@ void CPU::LDFVx(){
 void CPU::LDBVx(){
     uint8_t Vx=registers[(instruction&0x0F00)>>8];
 
-    ram->write(index+2,Vx%10);
+    ram.write(index+2,Vx%10);
     Vx=Vx/10;
-    ram->write(index+1,Vx%10);
+    ram.write(index+1,Vx%10);
     Vx=Vx/10;
-    ram->write(index,Vx%10);
+    ram.write(index,Vx%10);
 
 };    
 
@@ -461,19 +525,17 @@ void CPU::LDIVx(){
 
 	for (uint8_t i = 0; i <= Vx; i++)
 	{
-        ram->write(index,registers[i]);
+        ram.write(index,registers[i]);
         index++;
 	}
-
-
-
 };    
+
 
 void CPU::LDVxI(){
     int x=(instruction&0x0F00)>>8;
 
     for(int i=0;i<=x;i++){
-        registers[i]=ram->read(index);
+        registers[i]=ram.read(index);
         index++;
     }
     return;
