@@ -11,6 +11,7 @@ int main(){
 
 	RAM * ram=new RAM();
 	ram->loadRom("test_opcode.ch8");
+	//ram->loadRom("Pong.ch8");
 
 	/*
 	ram->write(0x0200,0xD0);

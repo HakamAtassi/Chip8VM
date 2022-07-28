@@ -301,19 +301,22 @@ void CPU::SUBN(){
         registers[15]=0;
     }
     return;
-
 };  
 
-void CPU::SHL(){
-    int index=(instruction&0x0F00)>>8;
 
-    if((registers[index]&0x8000)==0x8000){
+void CPU::SHL(){
+    int x=(instruction&0x0F00)>>8;
+    int y=(instruction&0x00F0)>>4;
+    
+    registers[x]=registers[y];
+
+    if((registers[x]&0x80)==0x80){
         registers[15]=1;
     }
     else{
         registers[15]=0;
     }
-    registers[index]=registers[index]<<1;
+    registers[x]=registers[x]<<1;
     return;
 };    
 
@@ -322,7 +325,6 @@ void CPU::SNEVxVy(){
     int index1=(instruction&0x0F00)>>8;
     int index2=(instruction&0x00F0)>>4;
     
-
     if(registers[index1]!=registers[index2]){
         PC++;
         PC++;
@@ -347,22 +349,17 @@ void CPU::RND(){    //generate random number
     registers[index1]=(rand()%0xF)&(instruction&0x00FF);    //possible error with mismatching sizes
 };
 
-template <typename T>
-void printVec(std::vector<T> vec){
-    printf("\n");
-    for(int i=0;i<vec.size();i++){
-        std::cout<<vec[i]<<" ";
-    }   
-}
 
 void CPU::DRW(){    //reads n bytes from index I and xors them into screen
 
     int bytes=(instruction&0x000F); //read display data
     uint8_t sprite=0x00;    //the 8 bit seg currently being printed to display
-    int x=((instruction&0x0F00)>>8)%64;
-    int y=((instruction&0x00F0)>>4)%32;
+
+    int x=registers[((instruction&0x0F00)>>8)]%64;  //ITS REGISTER X/Y!!!! 
+    int y=registers[((instruction&0x00F0)>>4)]%32;
 
     int VFCount=0;
+    registers[15]=0;
 
     for(int i=0;i<bytes;i++){   //reads byte at index+i (ie: 0x00001111)
         sprite=ram->read(index+i);
@@ -371,7 +368,7 @@ void CPU::DRW(){    //reads n bytes from index I and xors them into screen
             int topBit=(int)sprite/128;
             int vIndex=x+(y+i)*64+j;
             if(((*videoMemory)[vIndex]&topBit)==1 && VFCount==0){
-                VF=1;
+                registers[15]=1;
             }
             (*videoMemory)[vIndex]=(*videoMemory)[vIndex]^topBit;
             //printVec(*videoMemory);
@@ -448,13 +445,22 @@ void CPU::LDBVx(){
 };    
 
 void CPU::LDIVx(){
-    for(int i=0;i<16;i++){
+
+	uint8_t Vx = (instruction & 0x0F00u) >> 8u;
+
+	for (uint8_t i = 0; i <= Vx; i++)
+	{
         ram->write(index+i,registers[i]);
-    }
+	}
+
+
+
 };    
 
 void CPU::LDVxI(){
-    for(int i=0;i<16;i++){
+    int x=(instruction&0x0F00)>>8;
+
+    for(int i=0;i<=x;i++){
         registers[i]=ram->read(index+i);
     }
     return;
