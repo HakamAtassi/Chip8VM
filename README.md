@@ -15,7 +15,9 @@ g++ display.cpp ../../RAM.cpp ../../CPU.cpp ../../Chip8.cpp `pkg-config --cflags
 
 
 TODO: 
-* Improve performance
+* Refactor 
+* Valgrind debugging
+
 
 
 ## PERFORMANCE
@@ -23,3 +25,4 @@ TODO:
 Initial "IBM" rendering time: 4.000 seconds
 
 Improved "IBM" rendering time: 1.000 second => following changes to SDL2 rendering
+
