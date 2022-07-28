@@ -53,7 +53,7 @@ void Chip8::createWindow(){
 				return;
 		}
 
-		window = SDL_CreateWindow("SDL_CreateTexture",
+		window = SDL_CreateWindow("Chip8VM",
 						SDL_WINDOWPOS_UNDEFINED,
 						SDL_WINDOWPOS_UNDEFINED,
 						WIDTH, HEIGHT,
@@ -64,17 +64,18 @@ void Chip8::createWindow(){
 		texture = SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET,640,320);
 }
 
-void Chip8::drawPixels(int x, int y){
+void Chip8::drawPixels(int x, int y,int index){
 		SDL_Rect r;
 
 		r.w = PIXELSIZE; //pixel size
 		r.h = PIXELSIZE;
 
-		r.x=x;
-		r.y=y;
+		r.x=x*PIXELSIZE;
+		r.y=y*PIXELSIZE;
 
 		SDL_SetRenderTarget(renderer, texture);
-		SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0x00);
+		SDL_SetRenderDrawColor(renderer, (*videoMemory)[index]*255, (*videoMemory)[index]*255, (*videoMemory)[index]*255, 0x00);
+
 		SDL_RenderFillRect(renderer, &r);
 		SDL_SetRenderTarget(renderer, NULL);
 		SDL_RenderCopy(renderer, texture, NULL, NULL);
@@ -89,9 +90,7 @@ void Chip8::fetchExecute(){
 
 void Chip8::refreshDisplay(){
 	for(int i=0;i<2048;i++){	//refresh screen
-		if((*videoMemory)[i]==true){
-			drawPixels((i%64)*10,(i/64)*10);
-		}
+		drawPixels((i%64),(i/64),i);
 	}
 }
 

@@ -89,7 +89,7 @@ void CPU::execute(){    //determines what function to call based on instruction
     else if((instruction&0xF00F)==0x9000){
         SNEVxVy();
     }
-    else if((instruction&0xF000)==0xA002){
+    else if((instruction&0xF000)==0xA000){
         LDIAddr();
     }
     else if((instruction&0xF000)==0xB000){
@@ -167,7 +167,7 @@ void CPU::SYS(){
 
 
 void CPU::CLS(){
-    for(int i=0;i<4096;i++){
+    for(int i=0;i<2048;i++){
         (*videoMemory)[i]=0;
     }
 };
@@ -347,28 +347,35 @@ void CPU::RND(){    //generate random number
     registers[index1]=(rand()%0xF)&(instruction&0x00FF);    //possible error with mismatching sizes
 };
 
+template <typename T>
+void printVec(std::vector<T> vec){
+    printf("\n");
+    for(int i=0;i<vec.size();i++){
+        std::cout<<vec[i]<<" ";
+    }   
+}
+
 void CPU::DRW(){    //reads n bytes from index I and xors them into screen
 
     int bytes=(instruction&0x000F); //read display data
     uint8_t sprite=0x00;    //the 8 bit seg currently being printed to display
-    int x=(instruction&0x0F00)>>8;
-    int y=(instruction&0x00F0)>>4;
+    int x=((instruction&0x0F00)>>8)%64;
+    int y=((instruction&0x00F0)>>4)%32;
 
     int VFCount=0;
 
-    for(int i=0;i<bytes;i++){
-    int counter=0;  //the number of bits already processed to index display vector
+    for(int i=0;i<bytes;i++){   //reads byte at index+i (ie: 0x00001111)
         sprite=ram->read(index+i);
-        for(int bit=0;bit<8;bit++){ //add every bit to display by XOR (as per spec)
-            if((sprite&0x80)==0x80){
-                if(VFCount==0 && ((*videoMemory)[x+(y+i)*64+counter]&((int)sprite>>7))==1){   //set VF is a pixel is disabled
-                    registers[0x0f]=1;
-                    VFCount++;
-                }
-                (*videoMemory)[x+(y+i)*64+counter]=(*videoMemory)[x+(y+i)*64+counter]^((int)sprite>>7);
+        //write sprite into correct index in videoMemory
+        for(int j=0;j<8;j++){
+            int topBit=(int)sprite/128;
+            int vIndex=x+(y+i)*64+j;
+            if(((*videoMemory)[vIndex]&topBit)==1 && VFCount==0){
+                VF=1;
             }
+            (*videoMemory)[vIndex]=(*videoMemory)[vIndex]^topBit;
+            //printVec(*videoMemory);
             sprite=sprite<<1;
-            counter++;
         }
     }
     return;
@@ -444,7 +451,6 @@ void CPU::LDIVx(){
     for(int i=0;i<16;i++){
         ram->write(index+i,registers[i]);
     }
-
 };    
 
 void CPU::LDVxI(){

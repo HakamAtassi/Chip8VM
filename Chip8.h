@@ -27,7 +27,7 @@ namespace chip8VM{
 			SDL_Renderer *renderer;
 			SDL_Texture *texture;
             
-            void drawPixels(int x, int y);
+            void drawPixels(int x, int y,int index);
             void refreshDisplay();
             void getInput();    //get keyboard input and pipe into SDL
 
@@ -40,8 +40,6 @@ namespace chip8VM{
         public:
             Chip8(RAM * _ram, std::vector<bool> * _videoMemory,
             std::vector<bool> * _keyboardInput);
-
-
 
             void printRam();
             void createWindow();
