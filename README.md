@@ -11,6 +11,8 @@ g++ display.cpp ../../RAM.cpp ../../CPU.cpp ../../Chip8.cpp `pkg-config --cflags
 
 ![image](https://user-images.githubusercontent.com/83780720/181674355-83c47653-9d55-4f19-944f-ccf45522970b.png)
 
+![image](https://user-images.githubusercontent.com/83780720/181674439-5a70013f-b647-45cd-a59f-83b0a760647b.png)
+
 
 - Officially working. 
 
