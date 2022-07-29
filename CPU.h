@@ -96,7 +96,7 @@ namespace chip8VM{
             bool getVideoMemory(int index);
             void fetch();		//updates instruction and increments PC
             void execute();
-
+            void decrement();
             void setKeyboardInput(std::vector<bool> keyboardInput);
 
     };

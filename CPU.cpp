@@ -6,7 +6,8 @@
 #include <stdlib.h>
 #include <time.h>
 #include <fstream>
-
+#include <bits/stdc++.h>
+#include <iostream>
 
 #define FONTSET_ADDRESS 0x50
 #define START_ADDRESS 0x200
@@ -54,12 +55,21 @@ void CPU::setKeyboardInput(std::vector<bool> _keyboardInput){
     //printf("new keyboardInput set\n");
 }
 
+void CPU::decrement(){
+    
+    decrementDT();
+    decrementST();
+
+}
 
 
 void CPU::decrementDT(){
     if(registers[16]>0){
         registers[16]--;
     }
+    usleep(1000);
+
+
 }
 
 void CPU::decrementST(){
@@ -67,6 +77,8 @@ void CPU::decrementST(){
         registers[17]--;
     }
 }
+
+
 
 void CPU::loadRom(std::string rom){
     std::ifstream file(rom, std::ios::binary | std::ios::ate);

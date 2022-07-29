@@ -1,6 +1,6 @@
-#include "../../RAM.h"
-#include "../../CPU.h"
-#include "../../Chip8.h"
+#include "RAM.h"
+#include "CPU.h"
+#include "Chip8.h"
 #include <cstdint>
 #include <iostream>
 #include <bits/stdc++.h>
@@ -16,9 +16,9 @@ int main(){
 	//chip8.loadRom("test_opcode.ch8");
 	//chip8.loadRom("IBMLogo.ch8");
 	//chip8.loadRom("Maze.ch8");
-	chip8.loadRom("Pong.ch8");
+	//chip8.loadRom("Pong.ch8");
+	chip8.loadRom("unitTests/ROM/Tetris.ch8");
 
 	chip8.run();
-
 
 }

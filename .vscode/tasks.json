@@ -5,9 +5,9 @@
             "label": "C/C++: g++ build active file",
             "command": "/usr/bin/g++",
             "args": [
-                "../../CPU.cpp",
-                "../../RAM.cpp",
-                "../../Chip8.cpp",
+                "CPU.cpp",
+                "RAM.cpp",
+                "Chip8.cpp",
                 "-fdiagnostics-color=always",
                 "-g",
                 "`pkg-config --cflags --libs sdl2`",

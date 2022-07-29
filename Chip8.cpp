@@ -8,6 +8,7 @@
 #include <string>
 #include <fstream>
 
+
 #define WIDTH 640
 #define HEIGHT 320
 #define PIXELSIZE 10
@@ -91,6 +92,8 @@ void Chip8::fetchExecute(){
 	if(cpu.PC>=4095){
 		return;
 	}
+
+		cpu.decrement();	//decrement DT and ST if they are non 0
 		cpu.fetch();
 		cpu.execute();
 }
@@ -135,81 +138,81 @@ void Chip8::getInput(){
 					break;
 
 				case SDLK_4:
-					printf("4 pressed\n");
-					keyboardInput[0x04]=true;
+					printf("C pressed\n");
+					keyboardInput[0x0C]=true;
 					return;
 					break;
 
 				
 				case SDLK_q:
-					printf("q pressed\n");
-					keyboardInput[0x0A]=true;
+					printf("4 pressed\n");
+					keyboardInput[0x04]=true;
 					return;
 					break;
 
 				case SDLK_w:
-					printf("w pressed\n");
-					keyboardInput[0x0B]=true;
+					printf("5 pressed\n");
+					keyboardInput[0x05]=true;
 					return;
 					break;
 
 				case SDLK_e:
-					printf("e pressed\n");
-					keyboardInput[0x0C]=true;
+					printf("6 pressed\n");
+					keyboardInput[0x06]=true;
 					return;
 					break;
 
 				case SDLK_r:
-					printf("r pressed\n");
+					printf("D pressed\n");
 					keyboardInput[0x0D]=true;
 					return;
 					break;
 				
 				case SDLK_a:
-					printf("a pressed\n");
-					keyboardInput[0x0E]=true;
+					printf("7 pressed\n");
+					keyboardInput[0x07]=true;
 					return;
 					break;
 
 				case SDLK_s:
-					printf("s pressed\n");
-					keyboardInput[0x0F]=true;
+					printf("8 pressed\n");
+					keyboardInput[0x08]=true;
 					return;
 					break;
 				
 				case SDLK_d:
-					printf("d pressed\n");
-					keyboardInput[0x10]=true;
+					printf("9 pressed\n");
+					keyboardInput[0x9]=true;
 					return;
 					break;
 
 				case SDLK_f:
-					printf("f pressed\n");
-					keyboardInput[0x11]=true;
+					printf("E pressed\n");
+					keyboardInput[0x0E]=true;
 					return;
 					break;
 
 				case SDLK_z:
-					printf("z pressed\n");
-					keyboardInput[0x12]=true;
+					printf("A pressed\n");
+					keyboardInput[0x0A]=true;
 					return;
 					break;
 
 				case SDLK_x:
-					printf("x pressed\n");
-					keyboardInput[0x13]=true;
+					printf("0 pressed\n");
+					keyboardInput[0x00]=true;
 					return;
 					break;
 
 				case SDLK_c:
-					printf("c pressed\n");
-					keyboardInput[0x14]=true;
+					printf("B pressed\n");
+					keyboardInput[0x0B]=true;
 					return;
 					break;
 				
 				case SDLK_v:
-				printf("v pressed\n");
-					keyboardInput[0x15]=true;
+				printf("F pressed\n");
+					keyboardInput[0x0F]=true;
 					return;
 					break;
 
@@ -221,102 +224,103 @@ void Chip8::getInput(){
 			switch (event.key.keysym.sym){
 
 				case SDLK_1:
-					printf("1 released\n");
+					printf("1 pressed\n");
 					keyboardInput[0x01]=false;
 					return;
 					break;
 
+
 				case SDLK_2:
-					printf("2 released\n");
+					printf("2 pressed\n");
 					keyboardInput[0x02]=false;
 					return;
 					break;
 
 				case SDLK_3:
-					printf("3 released\n");
+					printf("3 pressed\n");
 					keyboardInput[0x03]=false;
 					return;
 					break;
+
 				case SDLK_4:
-					printf("4 released\n");
-					keyboardInput[0x04]=false;
-					return;
-					break;
-
-
-				case SDLK_q:
-					printf("q released\n");
-					keyboardInput[0x0A]=false;
-					return;
-					break;
-
-				case SDLK_w:
-					printf("w released\n");
-					keyboardInput[0x0B]=false;
-					return;
-					break;
-
-				case SDLK_e:
-					printf("e released\n");
+					printf("C pressed\n");
 					keyboardInput[0x0C]=false;
 					return;
 					break;
 
+				
+				case SDLK_q:
+					printf("4 pressed\n");
+					keyboardInput[0x04]=false;
+					return;
+					break;
+
+				case SDLK_w:
+					printf("5 pressed\n");
+					keyboardInput[0x05]=false;
+					return;
+					break;
+
+				case SDLK_e:
+					printf("6 pressed\n");
+					keyboardInput[0x06]=false;
+					return;
+					break;
+
 				case SDLK_r:
-					printf("r released\n");
+					printf("D pressed\n");
 					keyboardInput[0x0D]=false;
 					return;
 					break;
 				
 				case SDLK_a:
-					printf("a released\n");
-					keyboardInput[0x0E]=false;
+					printf("7 pressed\n");
+					keyboardInput[0x07]=false;
 					return;
 					break;
 
 				case SDLK_s:
-					printf("s released\n");
-					keyboardInput[0x0F]=false;
+					printf("8 pressed\n");
+					keyboardInput[0x08]=false;
 					return;
 					break;
 				
 				case SDLK_d:
-					printf("d released\n");
-					keyboardInput[0x10]=false;
+					printf("9 pressed\n");
+					keyboardInput[0x9]=false;
 					return;
 					break;
 
 				case SDLK_f:
-					printf("f released\n");
-					keyboardInput[0x11]=false;
+					printf("E pressed\n");
+					keyboardInput[0x0E]=false;
 					return;
 					break;
 
 				case SDLK_z:
-					printf("z released\n");
-					keyboardInput[0x12]=false;
+					printf("A pressed\n");
+					keyboardInput[0x0A]=false;
 					return;
 					break;
 
 				case SDLK_x:
-					printf("x released\n");
-					keyboardInput[0x13]=false;
+					printf("0 pressed\n");
+					keyboardInput[0x00]=false;
 					return;
 					break;
 
 				case SDLK_c:
-					printf("c released\n");
-					keyboardInput[0x14]=false;
-					break;
+					printf("B pressed\n");
+					keyboardInput[0x0B]=false;
 					return;
+					break;
 				
 				case SDLK_v:
-					printf("v released\n");
-					keyboardInput[0x15]=false;
+				printf("F pressed\n");
+					keyboardInput[0x0F]=false;
 					return;
 					break;
 
-				
 				default:
 					break;
 			}
@@ -324,7 +328,7 @@ void Chip8::getInput(){
 	cpu.setKeyboardInput(keyboardInput);
 }
 
-
+#include<unistd.h>
 
 void Chip8::run(){
 
@@ -336,6 +340,7 @@ void Chip8::run(){
 		if(cpu.PC>=0xFFF){
 			return;
 		}
+
 
 		fetchExecute();
 		refreshDisplay();
